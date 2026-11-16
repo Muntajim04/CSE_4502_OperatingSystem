@@ -22,7 +22,11 @@ void pmem_init(unsigned int mbi_addr)
 {
     unsigned int nps;
 
-    // TODO [Lab 1]: Define your local variables here.
+    unsigned int i,j;
+    unsigned int table_size;
+    unsigned int start_address,length,end_address;
+    unsigned int max_address=0;
+    unsigned int perm;
 
     // Calls the lower layer initialization primitive.
     // The parameter mbi_addr should not be used in the further code.
@@ -36,6 +40,19 @@ void pmem_init(unsigned int mbi_addr)
      *       divided by the page size.
      */
     // TODO [Lab 1]
+    table_size=get_size();
+    for (i = 0; i < table_size; i++)
+    {
+        end_address=get_mms(i)+get_mml(i);
+        if (end_address>max_address)
+        {
+            max_address=end_address;
+        }
+    }
+    nps=max_address/PAGESIZE;
+    
+    
+    
 
     set_nps(nps);  // Setting the value computed above to NUM_PAGES.
 
@@ -63,4 +80,28 @@ void pmem_init(unsigned int mbi_addr)
      *    so in that case, you should consider those pages as unavailable.
      */
     // TODO [Lab 1]
+    for (i = 0; i < nps; i++)
+    {
+        if (i < VM_USERLO_PI || i >= VM_USERHI_PI)
+        {
+            at_set_perm(i,1);
+        }
+        else
+        {
+            perm = 0;
+            for (j = 0; j < table_size; j++)
+            {
+                start_address=get_mms(j);
+                length=get_mml(j);
+                if (is_usable(j) && start_address <= i * PAGESIZE && (i + 1) *PAGESIZE <= start_address + length)
+                {
+                    perm=2;
+                    break;
+                }
+            }
+            at_set_perm(i,perm);
+        }
+        
+    }
+    
 }

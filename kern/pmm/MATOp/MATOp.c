@@ -28,14 +28,37 @@
  */
 unsigned int palloc()
 {
-    unsigned int palloc_free_index = 0;
+    unsigned int i;
+    unsigned int palloc_free_index=0;
+    static unsigned int last_search=VM_USERLO_PI;
+    unsigned int start=last_search;
 
     mem_lock();
 
-    // TODO [Lab 1]
-
+    i=last_search;
+    do
+    {
+        if (at_is_norm(i) && !at_is_allocated(i))
+        {
+            at_set_allocated(i,1);
+            palloc_free_index=i;
+            last_search=i+1;
+            if (last_search>=VM_USERHI_PI)
+            {
+                last_search=VM_USERLO_PI;
+            }
+            break;
+        }
+        i++;
+        if (i>=VM_USERHI_PI)
+        {
+            i=VM_USERLO_PI;
+        }
+        
+        
+    } while (i!=start);
+    
     mem_unlock();
-
     return palloc_free_index;
 }
 
@@ -51,5 +74,6 @@ void pfree(unsigned int pfree_index)
 {
     mem_lock();
     // TODO [Lab 1]
+    at_set_allocated(pfree_index,0);
     mem_unlock();
 }
